@@ -9,23 +9,20 @@
 
 class QIec104 : public QObject, public iec_base {
     Q_OBJECT
-public:
+   public:
     explicit QIec104(QObject* parent = 0);
     ~QIec104();
 
     QTcpSocket* tcp;
-    QTimer* tm;     // tmKeepAlive定时器(1 second)
+    QTimer* tm;  // tmKeepAlive定时器(1 second)
 
-
-public:
-
+   public:
     void terminate();
 
     void enableConnect();
     void disableConnect();
 
-
-private:
+   private:
     // override base class virtual functions
     int readTCP(char* buf, int size);
     void sendTCP(const char* buf, int size);
@@ -36,34 +33,30 @@ private:
     int bytesAvailable();
     void waitForReadyRead(int bytes, int msecs);
 
-    void dataIndication(struct iec_obj* /* obj */, unsigned int /* numpoints */);
+    void dataIndication(struct iec_obj* /* obj */,
+                        unsigned int /* numpoints */);
 
     // TODO
     void udpConnect();
     void udpDisconnect();
 
-
-
-private:
+   private:
     bool end;           // 是否终止
     bool allowConnect;  //
 
-
-
-signals:
+   signals:
     void signalTcpCpnnect();
     void signalTcpDisconnect();
     void signalDataIndication(struct iec_obj*, unsigned int);
 
-
-public slots:
+   public slots:
     void slotTcpDisconnect();
 
-private slots:
+   private slots:
     void slotTcpConnect();
-    void slotTcpReadyRead();    // ready to read via tcp socket
+    void slotTcpReadyRead();  // ready to read via tcp socket
     void slotTcpError(QAbstractSocket::SocketError err);
-    void slotTimeOut(); // when timer is
+    void slotTimeOut();  // when timer is
 };
 
-#endif // QIEC104_H
+#endif  // QIEC104_H

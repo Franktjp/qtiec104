@@ -9,7 +9,7 @@ Logger::Logger() {
 }
 
 Logger::~Logger() {
-    this->logList.clear();	// clear lists, sync
+    this->logList.clear();  // clear lists, sync
     this->timeList.clear();
 }
 
@@ -36,7 +36,7 @@ void Logger::deavtivateLog() {
 }
 
 void Logger::activateTime() {
-    this->logList.clear();	// clear lists, sync
+    this->logList.clear();  // clear lists, sync
     this->timeList.clear();
     this->isRegTime = true;
 }
@@ -63,7 +63,8 @@ int Logger::count() {
  * @param level
  */
 void Logger::pushMsg(const char* msg, unsigned int level) {
-    if (this->isLogable && this->level <= level && this->logList.size() < this->maxMsg) {
+    if (this->isLogable && this->level <= level &&
+        this->logList.size() < this->maxMsg) {
         this->logList.push_back(msg);
         if (this->isRegTime) {
             timeList.push_back(QTime());
@@ -72,14 +73,17 @@ void Logger::pushMsg(const char* msg, unsigned int level) {
 }
 
 /**
- * @brief LogMsg::pullMsg 从队列中删除消息
+ * @brief LogMsg::pullMsg 从队列中删除首部消息并返回
  * @return
  */
 QString Logger::pullMsg() {
-    if (this->logList.empty() || !this->isLogable) return "";
+    if (this->logList.empty() || !this->isLogable)
+        return "";
 
     QString s = logList.front();
     logList.pop_front();
+
+    return s;
 
     if (isRegTime) {
         char buf[201];
@@ -93,8 +97,7 @@ QString Logger::pullMsg() {
             //            timeinfo = localtime(&hora);
             strftime(buf, 200, "%H:%M:%S", timeinfo);
             s = buf + s;
-        }
-        else {
+        } else {
             s = "         " + s;
         }
         hora_ant = hora;

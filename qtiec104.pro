@@ -14,14 +14,16 @@ SOURCES += \
     logmsg.cpp \
     main.cpp \
     mainwindow.cpp \
-    qiec104.cpp
+    qiec104.cpp \
+    utils.cpp
 
 HEADERS += \
     iec_base.h \
     inner.h \
     logmsg.h \
     mainwindow.h \
-    qiec104.h
+    qiec104.h \
+    utils.h
 
 FORMS += \
     mainwindow.ui

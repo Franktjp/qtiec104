@@ -24,27 +24,52 @@
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="4">
+     <item row="1" column="1">
+      <widget class="QPushButton" name="pbConnect">
+       <property name="text">
+        <string>连接</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="6">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>连接状态    </string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>远端IP地址</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="5">
       <widget class="QLabel" name="label_3">
        <property name="text">
         <string>端口</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="4">
+     <item row="1" column="5">
       <widget class="QLineEdit" name="lePort"/>
      </item>
-     <item row="2" column="3">
-      <widget class="QLineEdit" name="leText"/>
-     </item>
-     <item row="3" column="4">
+     <item row="3" column="5">
       <widget class="QPushButton" name="pbSend">
        <property name="text">
         <string>发送</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1" colspan="4">
+     <item row="2" column="1">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>规约输入框</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1" colspan="5">
       <widget class="QSplitter" name="splitter">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -110,26 +135,22 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
-      <widget class="QPushButton" name="pbConnect">
+     <item row="2" column="5">
+      <widget class="QPushButton" name="pbParse">
        <property name="text">
-        <string>连接</string>
+        <string>解析</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QLabel" name="label_5">
+     <item row="1" column="6">
+      <widget class="QLabel" name="lbStatus">
        <property name="text">
-        <string>规约输入框</string>
+        <string/>
        </property>
       </widget>
      </item>
-     <item row="0" column="3">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>远端IP地址</string>
-       </property>
-      </widget>
+     <item row="2" column="3">
+      <widget class="QLineEdit" name="leText"/>
      </item>
      <item row="3" column="1">
       <widget class="QLabel" name="label_4">
@@ -138,24 +159,10 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="4">
-      <widget class="QPushButton" name="pbParse">
+     <item row="3" column="4">
+      <widget class="QPushButton" name="pbCopyLog">
        <property name="text">
-        <string>解析</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="5">
-      <widget class="QLabel" name="lbStatus">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="5">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>连接状态    </string>
+        <string>复制日志</string>
        </property>
       </widget>
      </item>
