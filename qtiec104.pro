@@ -19,7 +19,7 @@ SOURCES += \
 
 HEADERS += \
     iec_base.h \
-    inner.h \
+    iec_def.h \
     logmsg.h \
     mainwindow.h \
     qiec104.h \

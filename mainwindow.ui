@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>725</width>
-    <height>364</height>
+    <width>712</width>
+    <height>373</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,38 +27,7 @@
      <item row="1" column="1">
       <widget class="QPushButton" name="pbConnect">
        <property name="text">
-        <string>连接</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="6">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>连接状态    </string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="3">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>远端IP地址</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="5">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>端口</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="5">
-      <widget class="QLineEdit" name="lePort"/>
-     </item>
-     <item row="3" column="5">
-      <widget class="QPushButton" name="pbSend">
-       <property name="text">
-        <string>发送</string>
+        <string>连接服务器</string>
        </property>
       </widget>
      </item>
@@ -69,7 +38,48 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="1" colspan="5">
+     <item row="0" column="2">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>远端IP地址</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="4">
+      <widget class="QPushButton" name="pbParse">
+       <property name="text">
+        <string>解析</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="4">
+      <widget class="QLineEdit" name="lePort"/>
+     </item>
+     <item row="4" column="4">
+      <widget class="QPushButton" name="pbSend">
+       <property name="text">
+        <string>发送</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLineEdit" name="leIPAddr">
+       <property name="minimumSize">
+        <size>
+         <width>391</width>
+         <height>23</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="5">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>连接状态    </string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1" colspan="4">
       <widget class="QSplitter" name="splitter">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -125,45 +135,94 @@
        </widget>
       </widget>
      </item>
-     <item row="1" column="3">
-      <widget class="QLineEdit" name="leIPAddr">
-       <property name="minimumSize">
-        <size>
-         <width>391</width>
-         <height>23</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="5">
-      <widget class="QPushButton" name="pbParse">
-       <property name="text">
-        <string>解析</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="6">
+     <item row="1" column="5">
       <widget class="QLabel" name="lbStatus">
        <property name="text">
         <string/>
        </property>
       </widget>
      </item>
-     <item row="2" column="3">
+     <item row="2" column="2">
       <widget class="QLineEdit" name="leText"/>
      </item>
-     <item row="3" column="1">
+     <item row="4" column="1">
       <widget class="QLabel" name="label_4">
        <property name="text">
         <string>日志</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="4">
+     <item row="0" column="4">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>端口</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="3">
       <widget class="QPushButton" name="pbCopyLog">
        <property name="text">
         <string>复制日志</string>
        </property>
+      </widget>
+     </item>
+     <item row="3" column="1" colspan="4">
+      <widget class="QSplitter" name="splitter_2">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>24</height>
+        </size>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <widget class="QPushButton" name="pbSendStartDtAct">
+        <property name="text">
+         <string>U帧启动</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pbGeneralInterrogationAct">
+        <property name="text">
+         <string>总召唤</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pbGeneralInterrogationEnd">
+        <property name="text">
+         <string>总召唤结束</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pbSendCommand">
+        <property name="text">
+         <string>发送命令</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_5">
+        <property name="text">
+         <string>命令类型标识</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_7">
+        <property name="text">
+         <string>PushButton</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_8">
+        <property name="text">
+         <string>PushButton</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_9">
+        <property name="text">
+         <string>PushButton</string>
+        </property>
+       </widget>
       </widget>
      </item>
     </layout>
@@ -174,7 +233,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>725</width>
+     <width>712</width>
      <height>21</height>
     </rect>
    </property>

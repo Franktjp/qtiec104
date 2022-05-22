@@ -1,7 +1,7 @@
 #ifndef IEC_BASE_H
 #define IEC_BASE_H
 
-#include "inner.h"
+#include "iec_def.h"
 #include "logmsg.h"
 
 #pragma pack(push)
@@ -46,7 +46,7 @@ struct iec_obj {
 #pragma pack(pop)
 
 class iec_base {
-   public:
+public:
     // 传送原因 cause of transmition (standard)
     static const uint32_t UNUSED = 0;        // 没有使用
     static const uint32_t CYCLIC = 1;        // 周期、循环
@@ -88,35 +88,35 @@ class iec_base {
     // I格式的类型标识
     static const uint32_t M_SP_NA_1 = 1;  // single-point information
     static const uint32_t M_SP_TA_1 =
-        2;  // single-point information with time tag(cp24time2a)
+            2;  // single-point information with time tag(cp24time2a)
     static const uint32_t M_DP_NA_1 = 3;  // double-point information
     static const uint32_t M_ST_NA_1 = 5;  // step position information
     static const uint32_t M_BO_NA_1 = 7;  // bitstring of 32 bits
     static const uint32_t M_BO_TA_1 =
-        8;  // bitstring of 32 bits with time tag(cp24time2a)
+            8;  // bitstring of 32 bits with time tag(cp24time2a)
     static const uint32_t M_ME_NA_1 = 9;   // normalized value
     static const uint32_t M_ME_NB_1 = 11;  // scaled value
     static const uint32_t M_ME_NC_1 = 13;  // floating point
     static const uint32_t M_IT_NA_1 = 15;  // integrated totals
     static const uint32_t M_PS_NA_1 =
-        20;  // Packed single point information with status change detection
+            20;  // Packed single point information with status change detection
     static const uint32_t M_SP_TB_1 =
-        30;  // single-point information with time tag(cp56time2a)
+            30;  // single-point information with time tag(cp56time2a)
     static const uint32_t M_DP_TB_1 =
-        31;  // double-point information with time tag
+            31;  // double-point information with time tag
     static const uint32_t M_ST_TB_1 =
-        32;  // step position information with time tag
+            32;  // step position information with time tag
     static const uint32_t M_BO_TB_1 = 33;  // bitstring of 32 bits with time tag
     static const uint32_t M_ME_TD_1 = 34;  // normalized value with time tag
     static const uint32_t M_ME_TE_1 = 35;  // scaled value with time tag
     static const uint32_t M_ME_TF_1 = 36;  // floating point with time tag
     static const uint32_t M_IT_TB_1 = 37;  // integrated totals with time tag
     static const uint32_t M_EP_TD_1 =
-        38;  // Event of protection equipment with CP56Time2a time tag
+            38;  // Event of protection equipment with CP56Time2a time tag
     static const uint32_t M_EP_TE_1 = 39;  // Packed start events of protection
     // equipment with CP56Time2a time tag
     static const uint32_t M_EP_TF_1 =
-        40;  // Packed output circuit information of protection equipment with
+            40;  // Packed output circuit information of protection equipment with
     // CP56Time2a time tag
     static const uint32_t C_SC_NA_1 = 45;  // single command
     static const uint32_t C_DC_NA_1 = 46;  // double command
@@ -124,20 +124,20 @@ class iec_base {
     static const uint32_t C_SE_NA_1 = 48;  // set-point normalised command
     static const uint32_t C_SE_NB_1 = 49;  // set-point scaled command
     static const uint32_t C_SE_NC_1 =
-        50;  // set-point short floating point command
+            50;  // set-point short floating point command
     static const uint32_t C_BO_NA_1 = 51;  // Bitstring of 32 bit command
     static const uint32_t C_SC_TA_1 = 58;  // single command with time tag
     static const uint32_t C_DC_TA_1 = 59;  // double command with time tag
     static const uint32_t C_RC_TA_1 =
-        60;  // regulating step command with time tag
+            60;  // regulating step command with time tag
     static const uint32_t C_SE_TA_1 =
-        61;  // set-point normalised command with time tag
+            61;  // set-point normalised command with time tag
     static const uint32_t C_SE_TB_1 =
-        62;  // set-point scaled command with time tag
+            62;  // set-point scaled command with time tag
     static const uint32_t C_SE_TC_1 =
-        63;  // set-point short floating point command with time tag
+            63;  // set-point short floating point command with time tag
     static const uint32_t C_BO_TA_1 =
-        64;  // Bitstring of 32 bit command with time tag
+            64;  // Bitstring of 32 bit command with time tag
     static const uint32_t M_EI_NA_1 = 70;   // end of initialization
     static const uint32_t C_IC_NA_1 = 100;  // general interrogation (GI)
     static const uint32_t C_CI_NA_1 = 101;  // counter interrogation
@@ -145,25 +145,40 @@ class iec_base {
     static const uint32_t C_CS_NA_1 = 103;  // clock synchronization command
     static const uint32_t C_RP_NA_1 = 105;  // reset process command
     static const uint32_t C_TS_TA_1 =
-        107;  // test command with time tag CP56Time2a
+            107;  // test command with time tag CP56Time2a
     static const uint32_t P_ME_NA_1 =
-        110;  // Parameter of measured values, normalized value
+            110;  // Parameter of measured values, normalized value
     static const uint32_t P_ME_NB_1 =
-        111;  // Parameter of measured values, scaled value
+            111;  // Parameter of measured values, scaled value
     static const uint32_t P_ME_NC_1 =
-        112;  // Parameter of measured values, short floating point number
+            112;  // Parameter of measured values, short floating point number
     static const uint32_t P_AC_NA_1 = 113;  // Parameter activation
 
     // TCP连接使用固定端口号
     static const uint32_t SERVERPORT = 2404;
 
-   public:
+private:
+    uint32_t slavePort;  // tcp port, defaults to 9090
+    char slaveIP[20];    // slave ip address
+
+    uint16_t masterAddr;  // TODO: what ?
+
+    bool isConnected;  // tcp or udp connect status: true->connected & false->not connected
+
+    // TODO: 内部计数器
+    uint16_t vs;  // 发送包数量
+    uint16_t vr;  // 接受包数量
+
+public:
+    Logger log;
+
+public:
     // functions
     iec_base();
-    // parse APDU
-    void parse(struct apdu* papdu, int sz);
+    void parse(struct apdu* papdu, int sz, bool isSend = true);
     void send(const struct apdu& wapdu);
     void packetReadyTCP();
+    void showFrame(const char* buf, int size, bool isSend);
 
     uint32_t getSlavePort();
     void setSlavePort(uint32_t port);
@@ -174,7 +189,7 @@ class iec_base {
     void onTcpConnect();
     void onTcpDisconnect();
 
-   protected:
+protected:
     //
     virtual int readTCP(char* buf,
                         int size) = 0;  // 返回0失败，返回一个正数成功
@@ -184,8 +199,7 @@ class iec_base {
     virtual void dataIndication(struct iec_obj* /* obj */,
                                 unsigned int /* numpoints */) = 0;
 
-    // tcp connect
-    virtual void tcpConnect() = 0;
+    virtual void tcpConnect() = 0;  // tcp connect
     virtual void tcpDisconnect() = 0;
     // TODO: udp connect
     virtual void udpConnect() = 0;
@@ -196,31 +210,16 @@ class iec_base {
     // wait until bytes data is ready or msecs milliseconds have passed
     virtual void waitForReadyRead(int bytes, int msecs) = 0;
 
-   private:
+public:
     void sendStartDtAct();  // 请求建立通信链路（主站->从站）
     void sendStartDtCon();  // 确认建立通信链路（从站->主站）
     void sendStopDtAct();   // 请求停止通信链路（主站->从站）
     void sendStopDtCon();   // 确认停止通信链路（从站->主站）
     void sendTestfrAct();   // 测试通信链路
     void sendTestfrCon();   // 测试通信链路确认
+    void generalInterrogationAct();  // 总召唤激活
     void generalInterrogationCon();  // 总召唤确认
     void generalInterrogationEnd();  // 总召唤结束
-
-   private:
-    uint32_t slavePort;  // tcp port, defaults to 9090
-    char slaveIP[20];    // slave
-
-    uint16_t masterAddr;  // TODO: what ?
-
-    bool isConnected;  // tcp or udp connect status: true->connected |
-                       // false->not connected
-
-    // TODO:
-    uint16_t vs;  // 发送包数量
-    uint16_t vr;  // 接受包数量
-
-   public:
-    Logger log;
 };
 
 #endif  // IEC_BASE_H

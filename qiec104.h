@@ -9,20 +9,26 @@
 
 class QIec104 : public QObject, public iec_base {
     Q_OBJECT
-   public:
+public:
     explicit QIec104(QObject* parent = 0);
     ~QIec104();
 
     QTcpSocket* tcp;
     QTimer* tm;  // tmKeepAlive定时器(1 second)
 
-   public:
+
+private:
+    bool end;           // 是否终止
+    bool allowConnect;  //
+
+public:
     void terminate();
 
     void enableConnect();
     void disableConnect();
+    void initSocket();
 
-   private:
+private:
     // override base class virtual functions
     int readTCP(char* buf, int size);
     void sendTCP(const char* buf, int size);
@@ -40,19 +46,15 @@ class QIec104 : public QObject, public iec_base {
     void udpConnect();
     void udpDisconnect();
 
-   private:
-    bool end;           // 是否终止
-    bool allowConnect;  //
-
-   signals:
+signals:
     void signalTcpCpnnect();
     void signalTcpDisconnect();
     void signalDataIndication(struct iec_obj*, unsigned int);
 
-   public slots:
+public slots:
     void slotTcpDisconnect();
 
-   private slots:
+private slots:
     void slotTcpConnect();
     void slotTcpReadyRead();  // ready to read via tcp socket
     void slotTcpError(QAbstractSocket::SocketError err);

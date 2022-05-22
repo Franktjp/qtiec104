@@ -4,10 +4,18 @@ QIec104::QIec104(QObject* parent) : QObject(parent) {
     this->end = false;
     this->allowConnect = true;
 
-    this->tcp = new QTcpSocket();
     this->tm = new QTimer();
     this->log.activateLog();
+    initSocket();
+}
 
+QIec104::~QIec104() {
+    delete this->tcp;
+}
+
+
+void QIec104::initSocket() {
+    this->tcp = new QTcpSocket();
     connect(this->tcp, &QTcpSocket::connected, this, &QIec104::slotTcpConnect);
     connect(this->tcp, &QTcpSocket::disconnected, this,
             &QIec104::slotTcpDisconnect);
@@ -16,10 +24,6 @@ QIec104::QIec104(QObject* parent) : QObject(parent) {
     connect(this->tcp, &QTcpSocket::errorOccurred, this,
             &QIec104::slotTcpError);
     connect(this->tm, &QTimer::timeout, this, &QIec104::slotTimeOut);
-}
-
-QIec104::~QIec104() {
-    delete this->tcp;
 }
 
 void QIec104::terminate() {
@@ -56,6 +60,7 @@ void QIec104::tcpConnect() {
         qDebug() << buf;
     }
 }
+
 void QIec104::tcpDisconnect() {
     tcp->close();
 }
@@ -75,12 +80,18 @@ int QIec104::readTCP(char* buf, int size) {
 void QIec104::sendTCP(const char* buf, int size) {
     if (this->tcp->state() == QAbstractSocket::ConnectedState) {
         this->tcp->write(buf, size);
-        // TODO: log
+        if (log.isLogging()) {
+            showFrame(buf, size, true);
+        }
+    } else {
+        if (log.isLogging()) {
+            log.pushMsg("The tcp connection is not established!");
+        }
     }
 }
 
 void QIec104::slotTcpConnect() {
-    // TODO: useful?
+    // TODO: Is the option useful?
     this->tcp->setSocketOption(QAbstractSocket::LowDelayOption, 1);
     onTcpConnect();
     emit this->signalTcpCpnnect();

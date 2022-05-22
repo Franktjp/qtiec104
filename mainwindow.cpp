@@ -14,14 +14,21 @@ MainWindow::MainWindow(QWidget* parent)
     ui->leIPAddr->setInputMask("000.000.000.000;_");
     ui->pbConnect->setText("连接");
     ui->leIPAddr->setText("127.000.000.001");
+    ui->pbSend->setEnabled(false);
+    ui->pbSendStartDtAct->setEnabled(false);
+    ui->pbGeneralInterrogationAct->setEnabled(false);
 
     // 2. connect
 
-    connect(ui->pbConnect, &QPushButton::clicked, this, &MainWindow::slotPbConnectClicked);
     connect(&iec, &QIec104::signalTcpDisconnect, this, &MainWindow::slotTcpDisconnect);
     connect(logTimer, &QTimer::timeout, this, &MainWindow::slotLogTimerTimeout);
+    connect(ui->pbConnect, &QPushButton::clicked, this, &MainWindow::slotPbConnectClicked);
     connect(ui->pbParse, &QPushButton::clicked, this, &MainWindow::slotPbParseClicked);
     connect(ui->pbSend, &QPushButton::clicked, this, &MainWindow::slotPbSendClicked);
+    connect(ui->pbCopyLog, &QPushButton::clicked, this, &MainWindow::slotPbCopyLogClicked);
+    connect(ui->pbSendStartDtAct, &QPushButton::clicked, this, &MainWindow::slotPbSendStartDtAct);
+    connect(ui->pbGeneralInterrogationAct, &QPushButton::clicked, this, &MainWindow::slotPbGeneralInterrogationAct);
+    connect(&iec, &QIec104::signalTcpCpnnect, this, &MainWindow::slotTcpConnect);
 
 
     // 3. other members
@@ -37,7 +44,7 @@ MainWindow::MainWindow(QWidget* parent)
     iec.enableConnect();  // TODO: 先放在这里吧
 
     // 5. log timer
-    logTimer->start(300);
+    logTimer->start(100);
 
     //    QRegularExpressionValidator val;  // TODO: what
 }
@@ -53,12 +60,12 @@ void MainWindow::slotLogTimerTimeout() {
     }
 }
 
-void MainWindow::slotTcpConnect() {
+void MainWindow::slotTcpConnect() { // tcp connect has established
     // 设置iec的ip地址、port
     iec.setSlavePort(ui->lePort->text().toInt());
 
-    // TODO: 怎么报错了??
-    //    iec.setSlaveIP(const_cast<char*>(ui->leIPAddr->text().toStdString().c_str()));
+    ui->pbSendStartDtAct->setEnabled(true);
+    ui->lbStatus->setText("<font color='green'>连接成功</font>");
 }
 
 void MainWindow::slotDataIndication(struct iec_obj* pobj,
@@ -98,6 +105,7 @@ void MainWindow::slotPbConnectClicked() {
 
         ui->leIPAddr->setEnabled(false);
         ui->lePort->setEnabled(false);
+        ui->pbSend->setEnabled(true);
 
         ui->pbConnect->setText("停止连接");
         ui->lbStatus->setText("<font color='blue'>正在连接</font>");
@@ -113,13 +121,12 @@ void MainWindow::slotPbConnectClicked() {
 }
 
 void MainWindow::slotTcpDisconnect() {
-    qDebug() << "this is slotTcpDisconnect";
-    if (0) {
-        // TODO:好多事情
-        iec.disableConnect();
-    }
 
     ui->lbStatus->setText("<font color='red'>连接已断开</font>");
+
+    // TODO: set all sent pushButton unenabled.
+    ui->pbSendStartDtAct->setEnabled(false);
+    ui->pbGeneralInterrogationAct->setEnabled(false);
 
     if (iec.tm->isActive()) {
         ui->pbConnect->setText("停止连接");
@@ -142,6 +149,9 @@ void MainWindow::slotPbCopyLogClicked() {
     }
 
     QApplication::clipboard()->setText(sl.join("\n"));
+
+    // show the message box
+    QMessageBox::information(this, "info", "Log copied to clipboard!");
 }
 
 void MainWindow::slotPbParseClicked() {
@@ -154,13 +164,11 @@ void MainWindow::slotPbParseClicked() {
         return;
     }
 
-    sprintf(buf, "%s: start to parse message [%s]", Q_FUNC_INFO, ui->leText->text().toStdString().c_str());
-    iec.log.pushMsg(buf);
-
     uint8_t* binary = new uint8_t[size / 2];
     byteString2BinaryString(ui->leText->text(), binary);
     // Such as, U message: 680407000000
-    iec.parse((struct apdu*)binary, size / 2);
+    iec.showFrame((char*)binary, size / 2, true);
+    iec.parse((struct apdu*)binary, size / 2, false);
     delete []binary;
 }
 
@@ -171,17 +179,26 @@ void MainWindow::slotPbSendClicked() {
     // TODO: send
 
     if (size % 2) {
-        sprintf(buf, "%s: The message of LineText is wrong", Q_FUNC_INFO);
+        sprintf(buf, "%s: The message is wrong", Q_FUNC_INFO);
         iec.log.pushMsg(buf);
         return;
     }
 
-    sprintf(buf, "%s: start to parse message [%s]", Q_FUNC_INFO, ui->leText->text().toStdString().c_str());
+    sprintf(buf, "%s: send message [%s]", Q_FUNC_INFO, ui->leText->text().toStdString().c_str());
     iec.log.pushMsg(buf);
 
     uint8_t* binary = new uint8_t[size / 2];
     byteString2BinaryString(ui->leText->text(), binary);
-    // Such as, U message: 680407000000
-    iec.parse((struct apdu*)binary, size / 2);
+    iec.parse((struct apdu*)binary, size / 2, true);
     delete []binary;
+}
+
+void MainWindow::slotPbSendStartDtAct() {
+    iec.sendStartDtAct();
+    ui->pbGeneralInterrogationAct->setEnabled(true);
+    ui->pbSendStartDtAct->setEnabled(false);
+}
+
+void MainWindow::slotPbGeneralInterrogationAct() {
+    iec.generalInterrogationAct();
 }

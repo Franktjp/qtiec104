@@ -10,6 +10,7 @@ iec_base::iec_base() {
     this->masterAddr = 1;  // 公共地址
 
     this->vs = this->vr = 0;
+    this->isConnected = false;
 }
 
 uint32_t iec_base::getSlavePort() {
@@ -106,6 +107,27 @@ void iec_base::packetReadyTCP() {
     }
 }
 
+void iec_base::showFrame(const char* buf, int size, bool isSend) {
+    char buffer[200];
+
+    if (log.isLogging()) {
+        memset(buffer, 0, sizeof(buffer));
+        if (isSend) {
+            sprintf(buffer, "send --> size: (%03d) ", size);
+        } else {
+            sprintf(buffer, "receive --> size: (%03d) ", size);
+        }
+        int cnt = 20, i;
+        for (i = 0; i < size && i < cnt; ++i) {
+            sprintf(buffer + strlen(buffer), "%02x ", buf[i]);
+        }
+        if (size > cnt) {
+            sprintf(buffer + strlen(buffer), "...");
+        }
+        log.pushMsg(buffer);
+    }
+}
+
 void iec_base::send(const struct apdu& wapdu) {
     this->sendTCP(reinterpret_cast<const char*>(&wapdu), wapdu.length + 2);
 }
@@ -113,7 +135,8 @@ void iec_base::send(const struct apdu& wapdu) {
 void iec_base::onTcpConnect() {
     this->vr = this->vs = 0;
     this->isConnected = true;
-    sendStartDtAct();  // 请求建立通信链路(主站->从站)
+    // TODO: 先测试U帧启动，稍后取消注释
+//    sendStartDtAct();  // 请求建立通信链路(主站->从站)
     this->log.pushMsg("connect success!");
 }
 
@@ -130,13 +153,15 @@ void iec_base::onTcpDisconnect() {
  */
 void iec_base::sendStartDtAct() {
     struct apdu a;
+
+    log.pushMsg("send STARTDTACT");
+
     a.start = START;
     a.length = 4;
     a.NS = uint16_t(STARTDTACT);
     a.NR = 0;
     send(a);
     // TODO: 是否将log交给上层处理？
-    this->log.pushMsg("send STARTDTACT");
 }
 
 void iec_base::sendStartDtCon() {
@@ -189,6 +214,28 @@ void iec_base::sendTestfrCon() {
     this->log.pushMsg("send TESTFRCON");
 }
 
+void iec_base::generalInterrogationAct() {
+    struct apdu a;
+    a.start = START;
+    a.length = 0x0E;
+    a.NS = vs;
+    a.NR = vr;
+    a.head.type = INTERROGATION;  // TODO: 为何是INTERROGATION
+    a.head.num = 1;
+    a.head.sq = 0;
+    a.head.cot = ACTIVATION;  // 6: 激活（控制方向）
+    //    a.head.t = 0;
+    //    a.head.pn = 0;
+    //    a.head.oa = ...
+    a.head.ca = masterAddr;
+    a.nsq100.ioa16 = 0x00;
+    a.nsq100.ioa8 = 0x00;
+    a.nsq100.obj.qoi = 0x14;
+
+    send(a);
+    vs += 2;
+}
+
 void iec_base::generalInterrogationCon() {
     struct apdu a;
     a.start = START;
@@ -233,7 +280,15 @@ void iec_base::generalInterrogationEnd() {
     vs += 2;
 }
 
-void iec_base::parse(struct apdu* papdu, int size) {
+
+
+/**
+ * @brief iec_base::parse
+ * @param papdu
+ * @param size
+ * @param isSend - If we want to send the result to server.
+ */
+void iec_base::parse(struct apdu* papdu, int size, bool isSend) {
     struct apdu wapdu;  // 缓冲区组装发送apdu
     uint16_t vr_new;    // TODO
     stringstream ss;
@@ -250,32 +305,38 @@ void iec_base::parse(struct apdu* papdu, int size) {
 
     if (size == 6) {  // U格式APDU长度为6（2 + 4）
         switch (papdu->NS) {
-            case STARTDTACT: {
-                // 子站：发送确认建立通信链路给主站
-                log.pushMsg("receive STARTDTACT");
+        case STARTDTACT: {
+            // 子站：发送确认建立通信链路给主站
+            log.pushMsg("receive STARTDTACT");
+            if (isSend) {
                 sendStartDtCon();
-            } break;
-            case STARTDTCON:
-                // TODO:
-                log.pushMsg("STARTDTCON");
-                break;
-            case STOPDTACT: {  // 停止数据传送命令
-                log.pushMsg("receive STOPDTACT");
+            }
+        } break;
+        case STARTDTCON:
+            // TODO:
+            log.pushMsg("STARTDTCON");
+            break;
+        case STOPDTACT: {  // 停止数据传送命令
+            log.pushMsg("receive STOPDTACT");
+            if (isSend) {
                 sendStopDtCon();
-            } break;
-            case STOPDTCON:  // 停止数据传送命令确认
-                // TODO:
-                break;
-            case TESTFRACT: {
-                // 链路测试命令
-                log.pushMsg("   TESTFRACT");
+            }
+        } break;
+        case STOPDTCON:  // 停止数据传送命令确认
+            // TODO:
+            break;
+        case TESTFRACT: {
+            // 链路测试命令
+            log.pushMsg("   TESTFRACT");
+            if (isSend) {
                 sendTestfrCon();
-            } break;
-            case TESTFRCON:  // 链路测试命令确认
-                break;
-            default:
-                log.pushMsg("ERROR: unknown control message");
-                break;
+            }
+        } break;
+        case TESTFRCON:  // 链路测试命令确认
+            break;
+        default:
+            log.pushMsg("ERROR: unknown control message");
+            break;
         }
     } else {
         // TODO:
@@ -290,75 +351,79 @@ void iec_base::parse(struct apdu* papdu, int size) {
         log.pushMsg(ss.str().c_str());
 
         switch (papdu->head.type) {
-            case M_SP_NA_1: {  // 1: single-point information
-                struct iec_type1* pobj;
-                // TODO:
+        case M_SP_NA_1: {  // 1: single-point information
+            struct iec_type1* pobj;
+            // TODO:
 
-            } break;
-            case M_SP_TA_1:  // 2: single-point information with time
-                             // tag(cp24time2a)
-                break;
-            case M_BO_NA_1: {  // 7: bitstring of 32 bits
-                // 监视方向过程信息的应用服务数据单元
-                struct iec_type7* pobj;
-                struct iec_obj* piecarr = new iec_obj[papdu->head.num];
-                uint32_t addr24 = 0;  // 24位信息对象地址
+        } break;
+        case M_SP_TA_1:  // 2: single-point information with time
+            // tag(cp24time2a)
+            break;
+        case M_BO_NA_1: {  // 7: bitstring of 32 bits
+            // 监视方向过程信息的应用服务数据单元
+            struct iec_type7* pobj;
+            struct iec_obj* piecarr = new iec_obj[papdu->head.num];
+            uint32_t addr24 = 0;  // 24位信息对象地址
 
-                for (int i = 0; i < papdu->head.num; ++i) {
-                    if (papdu->head.sq) {
-                        pobj = &papdu->sq7.obj[i];
-                        if (i == 0) {
-                            addr24 = papdu->sq7.ioa16 +
-                                     ((uint32_t)papdu->sq7.ioa8 << 16);
-                        } else {
-                            ++addr24;
-                        }
+            for (int i = 0; i < papdu->head.num; ++i) {
+                if (papdu->head.sq) {
+                    pobj = &papdu->sq7.obj[i];
+                    if (i == 0) {
+                        addr24 = papdu->sq7.ioa16 +
+                                ((uint32_t)papdu->sq7.ioa8 << 16);
                     } else {
-                        pobj = &papdu->nsq7[i].obj;
-                        addr24 = papdu->nsq7[i].ioa16 +
-                                 ((uint32_t)papdu->nsq7[i].ioa8 << 16);
+                        ++addr24;
                     }
-
-                    piecarr[i].address = addr24;
-                    piecarr[i].type = papdu->head.type;
-                    piecarr[i].ca = papdu->head.ca;
-                    piecarr[i].cause = papdu->head.cot;
-                    piecarr[i].pn = papdu->head.pn;
-                    piecarr[i].bsi = pobj->bsi;
-                    piecarr[i].value = (float)pobj->bsi;
-                    piecarr[i].ov = pobj->ov;
-                    piecarr[i].bl = pobj->bl;
-                    piecarr[i].sb = pobj->sb;
-                    piecarr[i].nt = pobj->nt;
-                    piecarr[i].iv = pobj->iv;
+                } else {
+                    pobj = &papdu->nsq7[i].obj;
+                    addr24 = papdu->nsq7[i].ioa16 +
+                            ((uint32_t)papdu->nsq7[i].ioa8 << 16);
                 }
 
-                dataIndication(piecarr, papdu->head.num);
-                delete[] piecarr;
-            } break;
-            case M_BO_TA_1:  // 8: bitstring of 32 bits with time
-                             // tag(cp24time2a)
-                break;
-            case C_SC_NA_1:  // 45: single command
-                break;
-            case C_BO_NA_1:  // 51: bitstring of 32 bit command
-                break;
-            case M_EI_NA_1:  // 70:end of initialization(初始化结束)
-                break;
+                piecarr[i].address = addr24;
+                piecarr[i].type = papdu->head.type;
+                piecarr[i].ca = papdu->head.ca;
+                piecarr[i].cause = papdu->head.cot;
+                piecarr[i].pn = papdu->head.pn;
+                piecarr[i].bsi = pobj->bsi;
+                piecarr[i].value = (float)pobj->bsi;
+                piecarr[i].ov = pobj->ov;
+                piecarr[i].bl = pobj->bl;
+                piecarr[i].sb = pobj->sb;
+                piecarr[i].nt = pobj->nt;
+                piecarr[i].iv = pobj->iv;
+            }
 
-            case C_IC_NA_1:  // 100: general interrogation
-                // case INTERROGATION:
-                // 从站收到类型标识100的报文后：
-                // 总召唤确认
-                generalInterrogationCon();
-                // 发送遥测与遥信数据
-                // TODO:
+            dataIndication(piecarr, papdu->head.num);
+            delete[] piecarr;
+        } break;
+        case M_BO_TA_1:  // 8: bitstring of 32 bits with time
+            // tag(cp24time2a)
+            break;
+        case C_SC_NA_1:  // 45: single command
+            break;
+        case C_BO_NA_1:  // 51: bitstring of 32 bit command
+            break;
+        case M_EI_NA_1:  // 70:end of initialization(初始化结束)
+            break;
 
-                // 总召唤结束
-                generalInterrogationEnd();
-                break;
-            default:
-                break;
+        case C_IC_NA_1:  // 100: general interrogation
+            // 主站收到总召唤确认报文 或 总召唤激活结束报文
+            // TODO:
+
+            break;
+//            // case INTERROGATION:
+//            // 从站收到类型标识100的报文后：
+//            // 总召唤确认
+//            generalInterrogationCon();
+//            // 发送遥测与遥信数据
+//            // TODO:
+
+//            // 总召唤结束
+//            generalInterrogationEnd();
+//            break;
+        default:
+            break;
         }
     }
 }
