@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>712</width>
-    <height>373</height>
+    <height>384</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,17 +24,10 @@
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="1" column="1">
-      <widget class="QPushButton" name="pbConnect">
+     <item row="2" column="4">
+      <widget class="QPushButton" name="pbParse">
        <property name="text">
-        <string>连接服务器</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>规约输入框</string>
+        <string>解析</string>
        </property>
       </widget>
      </item>
@@ -45,22 +38,8 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="4">
-      <widget class="QPushButton" name="pbParse">
-       <property name="text">
-        <string>解析</string>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="4">
       <widget class="QLineEdit" name="lePort"/>
-     </item>
-     <item row="4" column="4">
-      <widget class="QPushButton" name="pbSend">
-       <property name="text">
-        <string>发送</string>
-       </property>
-      </widget>
      </item>
      <item row="1" column="2">
       <widget class="QLineEdit" name="leIPAddr">
@@ -72,20 +51,243 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="5">
-      <widget class="QLabel" name="label">
+     <item row="8" column="3">
+      <widget class="QPushButton" name="pbCopyLog">
        <property name="text">
-        <string>连接状态    </string>
+        <string>复制日志</string>
        </property>
       </widget>
      </item>
-     <item row="5" column="1" colspan="4">
+     <item row="3" column="1" colspan="4">
+      <widget class="QSplitter" name="splitter_2">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>24</height>
+        </size>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <widget class="QPushButton" name="pbSendStartDtAct">
+        <property name="text">
+         <string>U帧启动</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pbGeneralInterrogationAct">
+        <property name="text">
+         <string>总召唤</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pbGeneralInterrogationEnd">
+        <property name="text">
+         <string>总召唤结束</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="pushButton_5">
+        <property name="text">
+         <string>命令类型标识</string>
+        </property>
+       </widget>
+      </widget>
+     </item>
+     <item row="6" column="1" colspan="4">
+      <widget class="QSplitter" name="splitter_3">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <widget class="QLabel" name="label_6">
+        <property name="minimumSize">
+         <size>
+          <width>85</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>信息对象地址</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>命令值</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>命令类型标识</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>限定词（QU）</string>
+        </property>
+       </widget>
+      </widget>
+     </item>
+     <item row="7" column="1" colspan="4">
+      <widget class="QSplitter" name="splitter_4">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>24</height>
+        </size>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <widget class="QPushButton" name="pbSendCommand">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>发送命令</string>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="leCommandAddress">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+       <widget class="QLineEdit" name="leCommandValue">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="cbCommandType">
+        <property name="minimumSize">
+         <size>
+          <width>160</width>
+          <height>0</height>
+         </size>
+        </property>
+        <item>
+         <property name="text">
+          <string>45: C_SC_NA_1单命令</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>46: C_DC_NA_1双命令</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>47: C_RC_NA_1步调节命令</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>58: C_SC_TA_1带时标(7bytes)的单命令</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>100: C_IC_NA_1召唤命令</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>103: C_CS_NA_1时钟同步</string>
+         </property>
+        </item>
+       </widget>
+       <widget class="QCheckBox" name="cbCommandSE">
+        <property name="text">
+         <string>S/E</string>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="cbCommandQU">
+        <property name="minimumSize">
+         <size>
+          <width>130</width>
+          <height>0</height>
+         </size>
+        </property>
+        <item>
+         <property name="text">
+          <string>0: QU-无另外的定义</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>1: QU-短脉冲持续时间</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>2: QU-长脉冲持续时间</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>3: QU-持续输出</string>
+         </property>
+        </item>
+       </widget>
+      </widget>
+     </item>
+     <item row="8" column="1">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>日志</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>规约输入框</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2" colspan="2">
+      <widget class="QLineEdit" name="leText"/>
+     </item>
+     <item row="9" column="1" colspan="4">
       <widget class="QSplitter" name="splitter">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>120</height>
+        </size>
        </property>
        <property name="maximumSize">
         <size>
@@ -135,6 +337,13 @@
        </widget>
       </widget>
      </item>
+     <item row="0" column="5">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>连接状态    </string>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="5">
       <widget class="QLabel" name="lbStatus">
        <property name="text">
@@ -142,13 +351,10 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="2">
-      <widget class="QLineEdit" name="leText"/>
-     </item>
-     <item row="4" column="1">
-      <widget class="QLabel" name="label_4">
+     <item row="1" column="1">
+      <widget class="QPushButton" name="pbConnect">
        <property name="text">
-        <string>日志</string>
+        <string>连接服务器</string>
        </property>
       </widget>
      </item>
@@ -159,70 +365,11 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="3">
-      <widget class="QPushButton" name="pbCopyLog">
+     <item row="2" column="5">
+      <widget class="QPushButton" name="pbSend">
        <property name="text">
-        <string>复制日志</string>
+        <string>发送报文</string>
        </property>
-      </widget>
-     </item>
-     <item row="3" column="1" colspan="4">
-      <widget class="QSplitter" name="splitter_2">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <widget class="QPushButton" name="pbSendStartDtAct">
-        <property name="text">
-         <string>U帧启动</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pbGeneralInterrogationAct">
-        <property name="text">
-         <string>总召唤</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pbGeneralInterrogationEnd">
-        <property name="text">
-         <string>总召唤结束</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pbSendCommand">
-        <property name="text">
-         <string>发送命令</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pushButton_5">
-        <property name="text">
-         <string>命令类型标识</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pushButton_7">
-        <property name="text">
-         <string>PushButton</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pushButton_8">
-        <property name="text">
-         <string>PushButton</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pushButton_9">
-        <property name="text">
-         <string>PushButton</string>
-        </property>
-       </widget>
       </widget>
      </item>
     </layout>

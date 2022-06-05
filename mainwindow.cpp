@@ -1,11 +1,10 @@
 #include "mainwindow.h"
 #include "logmsg.h"
-#include "utils.h"
 #include "ui_mainwindow.h"
+#include "utils.h"
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
-
     logTimer = new QTimer();
 
     // 1. control
@@ -20,16 +19,25 @@ MainWindow::MainWindow(QWidget* parent)
 
     // 2. connect
 
-    connect(&iec, &QIec104::signalTcpDisconnect, this, &MainWindow::slotTcpDisconnect);
+    connect(ui->pbConnect, &QPushButton::clicked, this,
+            &MainWindow::slotPbConnectClicked);
+    connect(ui->pbParse, &QPushButton::clicked, this,
+            &MainWindow::slotPbParseClicked);
+    connect(ui->pbSend, &QPushButton::clicked, this,
+            &MainWindow::slotPbSendClicked);
+    connect(ui->pbCopyLog, &QPushButton::clicked, this,
+            &MainWindow::slotPbCopyLogClicked);
+    connect(ui->pbSendStartDtAct, &QPushButton::clicked, this,
+            &MainWindow::slotPbSendStartDtAct);
+    connect(ui->pbGeneralInterrogationAct, &QPushButton::clicked, this,
+            &MainWindow::slotPbGeneralInterrogationAct);
+    connect(ui->pbSendCommand, &QPushButton::clicked, this,
+            &MainWindow::slotPbSendCommand);
+    connect(&iec, &QIec104::signalTcpConnect, this,
+            &MainWindow::slotTcpConnect);
+    connect(&iec, &QIec104::signalTcpDisconnect, this,
+            &MainWindow::slotTcpDisconnect);
     connect(logTimer, &QTimer::timeout, this, &MainWindow::slotLogTimerTimeout);
-    connect(ui->pbConnect, &QPushButton::clicked, this, &MainWindow::slotPbConnectClicked);
-    connect(ui->pbParse, &QPushButton::clicked, this, &MainWindow::slotPbParseClicked);
-    connect(ui->pbSend, &QPushButton::clicked, this, &MainWindow::slotPbSendClicked);
-    connect(ui->pbCopyLog, &QPushButton::clicked, this, &MainWindow::slotPbCopyLogClicked);
-    connect(ui->pbSendStartDtAct, &QPushButton::clicked, this, &MainWindow::slotPbSendStartDtAct);
-    connect(ui->pbGeneralInterrogationAct, &QPushButton::clicked, this, &MainWindow::slotPbGeneralInterrogationAct);
-    connect(&iec, &QIec104::signalTcpCpnnect, this, &MainWindow::slotTcpConnect);
-
 
     // 3. other members
     QString s;
@@ -60,7 +68,7 @@ void MainWindow::slotLogTimerTimeout() {
     }
 }
 
-void MainWindow::slotTcpConnect() { // tcp connect has established
+void MainWindow::slotTcpConnect() {  // tcp connect has established
     // 设置iec的ip地址、port
     iec.setSlavePort(ui->lePort->text().toInt());
 
@@ -114,14 +122,13 @@ void MainWindow::slotPbConnectClicked() {
         iec.tm->start(1000);
 
         char buf[100];
-        sprintf(buf, "%s: 正在连接", Q_FUNC_INFO);
+        sprintf(buf, "INFO: try to connect");
         iec.log.pushMsg(buf);
         qDebug() << buf;
     }
 }
 
 void MainWindow::slotTcpDisconnect() {
-
     ui->lbStatus->setText("<font color='red'>连接已断开</font>");
 
     // TODO: set all sent pushButton unenabled.
@@ -159,7 +166,7 @@ void MainWindow::slotPbParseClicked() {
     char buf[100];
 
     if (size % 2) {
-        sprintf(buf, "%s: The message of LineText is wrong", Q_FUNC_INFO);
+        sprintf(buf, "The message of LineText is wrong");
         iec.log.pushMsg(buf);
         return;
     }
@@ -169,28 +176,29 @@ void MainWindow::slotPbParseClicked() {
     // Such as, U message: 680407000000
     iec.showFrame((char*)binary, size / 2, true);
     iec.parse((struct apdu*)binary, size / 2, false);
-    delete []binary;
+    delete[] binary;
 }
 
 void MainWindow::slotPbSendClicked() {
     int size = ui->leText->text().size();
     char buf[100];
 
-    // TODO: send
-
     if (size % 2) {
-        sprintf(buf, "%s: The message is wrong", Q_FUNC_INFO);
+        sprintf(buf, "The message is wrong");
         iec.log.pushMsg(buf);
         return;
     }
 
-    sprintf(buf, "%s: send message [%s]", Q_FUNC_INFO, ui->leText->text().toStdString().c_str());
+    sprintf(buf, "send message [%s]", ui->leText->text().toStdString().c_str());
     iec.log.pushMsg(buf);
 
     uint8_t* binary = new uint8_t[size / 2];
     byteString2BinaryString(ui->leText->text(), binary);
     iec.parse((struct apdu*)binary, size / 2, true);
-    delete []binary;
+
+
+
+    delete[] binary;
 }
 
 void MainWindow::slotPbSendStartDtAct() {
@@ -201,4 +209,56 @@ void MainWindow::slotPbSendStartDtAct() {
 
 void MainWindow::slotPbGeneralInterrogationAct() {
     iec.generalInterrogationAct();
+}
+
+/**
+ * @brief MainWindow::slotPbSendCommand - When pushButton sendCommand is
+ * clicked.
+ */
+void MainWindow::slotPbSendCommand() {
+    struct iec_obj obj;
+    // set type
+    obj.type = ui->cbCommandType->currentText()
+            .left(ui->cbCommandType->currentText().indexOf(':'))
+            .toUInt();
+
+    // check and set command value and ioa address
+    if (ui->leCommandAddress->text().trimmed() == "" ||
+            ui->leCommandValue->text().trimmed() == "") {
+        return;
+    }
+    obj.address = ui->leCommandAddress->text().toUInt();  // 信息对象地址ioa
+    obj.value = ui->leCommandValue->text().toFloat();     //
+    //    obj.ca = ...; // ASDU公共地址
+    uint32_t t1;
+
+    switch (obj.type) {
+    case QIec104::C_SC_NA_1:
+    case QIec104::C_SC_TA_1: {
+        t1 = ui->leCommandValue->text().toUInt();
+        obj.scs = ui->leCommandValue->text().toUInt();
+    }
+        break;
+    case QIec104::C_DC_NA_1:
+        obj.dcs = ui->leCommandValue->text().toUInt();
+        break;
+    case QIec104::C_RC_NA_1:
+        obj.rcs = ui->leCommandValue->text().toUInt();
+        break;
+    case QIec104::C_SE_NA_1:
+        obj.value = ui->leCommandValue->text().toUInt();
+        break;
+    case QIec104::C_CS_NA_1:
+        break;
+        // TODO: more and more command
+    default:
+        break;
+    }
+
+    obj.se = ui->cbCommandSE->isChecked();  // S/E
+    obj.qu = ui->cbCommandQU->currentText()
+            .left(ui->cbCommandQU->currentText().indexOf(':'))
+            .toUInt();
+
+    iec.sendCommand(&obj);
 }

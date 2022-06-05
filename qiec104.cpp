@@ -1,7 +1,7 @@
 #include "qiec104.h"
 
 QIec104::QIec104(QObject* parent) : QObject(parent) {
-    this->end = false;
+    this->isEnd = false;
     this->allowConnect = true;
 
     this->tm = new QTimer();
@@ -13,7 +13,6 @@ QIec104::~QIec104() {
     delete this->tcp;
 }
 
-
 void QIec104::initSocket() {
     this->tcp = new QTcpSocket();
     connect(this->tcp, &QTcpSocket::connected, this, &QIec104::slotTcpConnect);
@@ -23,11 +22,12 @@ void QIec104::initSocket() {
             &QIec104::slotTcpReadyRead);
     connect(this->tcp, &QTcpSocket::errorOccurred, this,
             &QIec104::slotTcpError);
+    // NOTE: 定时器是socket相关的，只有建立连接才有用
     connect(this->tm, &QTimer::timeout, this, &QIec104::slotTimeOut);
 }
 
 void QIec104::terminate() {
-    this->end = true;
+    this->isEnd = true;
     this->tcp->close();
     // TODO:
 }
@@ -45,17 +45,17 @@ void QIec104::disableConnect() {
 }
 
 void QIec104::tcpConnect() {
-    if (this->end || !this->allowConnect) {
+    if (this->isEnd || !this->allowConnect) {
         return;
     }
     this->tcp->close();
 
-    if (!this->end && this->allowConnect) {
+    if (!this->isEnd && this->allowConnect) {
         this->tcp->connectToHost(getSlaveIP(), quint16(getSlavePort()),
                                  QIODevice::ReadWrite,
                                  QAbstractSocket::IPv4Protocol);
         char buf[100];
-        sprintf(buf, "%s, try to connect ip: %s", Q_FUNC_INFO, getSlaveIP());
+        sprintf(buf, "INFO: try to connect ip: %s, port: %d", getSlaveIP(), quint16(getSlavePort()));
         log.pushMsg(buf);
         qDebug() << buf;
     }
@@ -67,7 +67,7 @@ void QIec104::tcpDisconnect() {
 
 int QIec104::readTCP(char* buf, int size) {
     int ret;
-    if (this->end) {
+    if (this->isEnd) {
         return 0;
     }
     ret = (int)tcp->read(buf, size);
@@ -91,10 +91,10 @@ void QIec104::sendTCP(const char* buf, int size) {
 }
 
 void QIec104::slotTcpConnect() {
-    // TODO: Is the option useful?
-    this->tcp->setSocketOption(QAbstractSocket::LowDelayOption, 1);
+    // NOTE: Is the option useful?
+    tcp->setSocketOption(QAbstractSocket::LowDelayOption, 1);
     onTcpConnect();
-    emit this->signalTcpCpnnect();
+    emit this->signalTcpConnect();
 }
 
 void QIec104::slotTcpDisconnect() {
@@ -105,7 +105,7 @@ void QIec104::slotTcpDisconnect() {
 void QIec104::slotTcpReadyRead() {
     int i = 0;
     if (this->tcp->bytesAvailable() < 6) {
-        while (!this->tcp->waitForReadyRead(100) && i < 5) {  // delay 0.1 sec
+        while (!this->tcp->waitForReadyRead(30) && i < 5) {  // delay 0.03 sec
             // readyRead() signal not be emitted
             ++i;
         }
@@ -125,11 +125,11 @@ void QIec104::slotTcpError(QAbstractSocket::SocketError err) {
 }
 
 void QIec104::slotTimeOut() {
-    static unsigned int cnt = 1;
-    if (!this->end) {
+    static uint32_t cnt = 1;
+    if (!this->isEnd) {
         if (!(cnt++ % 5)) {  // 每5s输出一次
             if (tcp->state() != QAbstractSocket::ConnectedState &&
-                this->allowConnect) {
+                    this->allowConnect) {
                 char buf[100];
                 sprintf(buf, "%s, trying to connect ip: %s", Q_FUNC_INFO, getSlaveIP());
                 log.pushMsg(buf);
@@ -137,7 +137,9 @@ void QIec104::slotTimeOut() {
                 tcpConnect();
             }
         }
-        //        onTimerSecond();  // TODO: iec_base类实现，用于每秒定时处理
+
+        // 每秒定时处理
+        onTimeoutPerSecond();
     }
 }
 

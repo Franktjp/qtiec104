@@ -37,6 +37,7 @@ private slots:
 
     void slotPbSendStartDtAct();            // send U启动帧
     void slotPbGeneralInterrogationAct();   // send 总召唤激活帧
+    void slotPbSendCommand();               // send 命令
 
 signals:
 };

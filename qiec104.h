@@ -14,11 +14,11 @@ public:
     ~QIec104();
 
     QTcpSocket* tcp;
-    QTimer* tm;  // tmKeepAlive定时器(1 second)
+    QTimer* tm;  // tmKeepAlive定时器(per second)
 
 
 private:
-    bool end;           // 是否终止
+    bool isEnd;           // 是否终止
     bool allowConnect;  //
 
 public:
@@ -47,7 +47,7 @@ private:
     void udpDisconnect();
 
 signals:
-    void signalTcpCpnnect();
+    void signalTcpConnect();
     void signalTcpDisconnect();
     void signalDataIndication(struct iec_obj*, unsigned int);
 
