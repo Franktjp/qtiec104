@@ -1,9 +1,9 @@
 #ifndef LOGMSG_H
 #define LOGMSG_H
 
-#include <QList>
-#include <QString>
-#include <QTime>
+#include <list>
+#include <time.h>
+#include <string>
 
 class Logger {
 public:
@@ -23,16 +23,15 @@ public:
     bool isLogging();
     int count();
     void pushMsg(const char* msg, unsigned int level = 0);
-    QString pullMsg();
+    std::string pullMsg();
 
 private:
-    QList<QString> logList;
-    QList<QTime> timeList;
-    unsigned int maxMsg;  // the max number of messages
+    std::list<std::string> logList;
+    std::list<time_t> timeList;
+    uint32_t maxMsg;  // the max number of messages
     bool isLogable;
     bool isRegTime; // 记录时间
-    unsigned int
-    level;  // 显示级别0=全部，1打开，逐步显示更多信息 display level 0=all,
+    uint32_t level;  // 显示级别0=全部，1打开，逐步显示更多信息 display level 0=all,
     // 1 an on, display more information progressively
 };
 

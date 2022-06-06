@@ -117,7 +117,7 @@ void QIec104::slotTcpError(QAbstractSocket::SocketError err) {
     //    if (err != QAbstractSocket::SocketTimeoutError) {   // TODO:
     //    为啥要这样
     char buf[100];
-    sprintf(buf, "%s, socket error : %d(%s)", Q_FUNC_INFO, err,
+    sprintf(buf, "ERROR: socket error : %d(%s)", err,
             tcp->errorString().toStdString().c_str());
     log.pushMsg(buf);
     qDebug() << buf;
@@ -131,7 +131,7 @@ void QIec104::slotTimeOut() {
             if (tcp->state() != QAbstractSocket::ConnectedState &&
                     this->allowConnect) {
                 char buf[100];
-                sprintf(buf, "%s, trying to connect ip: %s", Q_FUNC_INFO, getSlaveIP());
+                sprintf(buf, "INFO: try to connect ip: %s", getSlaveIP());
                 log.pushMsg(buf);
                 qDebug() << buf;
                 tcpConnect();
