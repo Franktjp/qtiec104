@@ -196,6 +196,7 @@ void MainWindow::slotPbSendClicked() {
     byteString2BinaryString(ui->leText->text(), binary);
     iec.parse((struct apdu*)binary, size / 2, true);
 
+    // TODO: send不应该用`parse`，而是sendCommand或者其他
 
 
     delete[] binary;

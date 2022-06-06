@@ -18,6 +18,10 @@ iec_base::iec_base() {
     this->t3Timeout = -1;
     this->isConnected = false;
     this->ifCheckSeq = true;
+    this->allowSend = true;
+
+    this->numMsgUnack = 0;
+    this->numMsgReceived = 0;
 }
 
 uint32_t iec_base::getSlavePort() {
@@ -271,12 +275,13 @@ void iec_base::sendMonitorMessage() {
 }
 
 void iec_base::generalInterrogationAct() {
+    stringstream ss;
     struct apdu a;
     a.start = START;
     a.length = 0x0E;
     a.NS = vs << 1;
     a.NR = vr << 1;
-    a.head.type = INTERROGATION;  // TODO: 为何是INTERROGATION
+    a.head.type = INTERROGATION;
     a.head.num = 1;
     a.head.sq = 0;
     a.head.cot = ACTIVATION;  // 6: 激活（控制方向）
@@ -288,8 +293,19 @@ void iec_base::generalInterrogationAct() {
     a.nsq100.ioa8 = 0x00;
     a.nsq100.obj.qoi = 0x14;
 
-    send(a);
-    ++vs;
+    if (allowSend) {
+        send(a);
+        ++vs;
+        ++numMsgUnack;
+        if (numMsgUnack == CLIENTK) {
+            allowSend = false;
+        }
+    } else {
+        ss.str("");
+        ss << "WARNING: 已达到最大未确认报文数k(" << CLIENTK
+           << "), 停止报文发送";
+        log.pushMsg(ss.str().c_str());
+    }
 }
 
 /**
@@ -298,9 +314,17 @@ void iec_base::generalInterrogationAct() {
  */
 bool iec_base::sendCommand(struct iec_obj* obj) {
     struct apdu cmd;
-    stringstream oss;
+    stringstream ss;
     time_t t = time(nullptr);
     struct tm* timeinfo = localtime(&t);
+
+    if (!allowSend) {
+        ss.str("");
+        ss << "WARNING: 已达到最大未确认报文数k(" << CLIENTK
+           << "), 停止报文发送";
+        log.pushMsg(ss.str().c_str());
+        return false;
+    }
 
     switch (obj->type) {
         case C_SC_NA_1: {  // 45: single command
@@ -326,13 +350,13 @@ bool iec_base::sendCommand(struct iec_obj* obj) {
             send(cmd);
             ++vs;
             if (log.isLogging()) {
-                oss << "SINGLE COMMAND\n    ADDRESS: " << (uint32_t)obj->address
-                    << ", TYPE: " << (uint32_t)obj->type
-                    << ", SCS: " << (uint32_t)obj->scs
-                    << ", QU: " << (uint32_t)obj->qu
-                    << ", SE: " << (uint32_t)obj->se
-                    << ", COT: " << (uint32_t)obj->cause;
-                log.pushMsg(oss.str().c_str());
+                ss << "SINGLE COMMAND\n    ADDRESS: " << (uint32_t)obj->address
+                   << ", TYPE: " << (uint32_t)obj->type
+                   << ", SCS: " << (uint32_t)obj->scs
+                   << ", QU: " << (uint32_t)obj->qu
+                   << ", SE: " << (uint32_t)obj->se
+                   << ", COT: " << (uint32_t)obj->cause;
+                log.pushMsg(ss.str().c_str());
             }
         } break;
 
@@ -359,13 +383,13 @@ bool iec_base::sendCommand(struct iec_obj* obj) {
             send(cmd);
             ++vs;
             if (log.isLogging()) {
-                oss << "DOUBLE COMMAND\n    ADDRESS" << (uint32_t)obj->address
-                    << ", TYPE: " << (uint32_t)obj->type
-                    << ", DCS: " << (uint32_t)obj->dcs
-                    << ", QU: " << (uint32_t)obj->qu
-                    << ", SE: " << (uint32_t)obj->se
-                    << ", COT: " << (uint32_t)obj->cause;
-                log.pushMsg(oss.str().c_str());
+                ss << "DOUBLE COMMAND\n    ADDRESS" << (uint32_t)obj->address
+                   << ", TYPE: " << (uint32_t)obj->type
+                   << ", DCS: " << (uint32_t)obj->dcs
+                   << ", QU: " << (uint32_t)obj->qu
+                   << ", SE: " << (uint32_t)obj->se
+                   << ", COT: " << (uint32_t)obj->cause;
+                log.pushMsg(ss.str().c_str());
             }
         } break;
 
@@ -392,14 +416,14 @@ bool iec_base::sendCommand(struct iec_obj* obj) {
             send(cmd);
             ++vs;
             if (log.isLogging()) {
-                oss << "STEP ADJUST COMMAND\n    ADDRESS"
-                    << (uint32_t)obj->address
-                    << ", TYPE: " << (uint32_t)obj->type
-                    << ", RCS: " << (uint32_t)obj->rcs
-                    << ", QU: " << (uint32_t)obj->qu
-                    << ", SE: " << (uint32_t)obj->se
-                    << ", COT: " << (uint32_t)obj->cause;
-                log.pushMsg(oss.str().c_str());
+                ss << "STEP ADJUST COMMAND\n    ADDRESS"
+                   << (uint32_t)obj->address
+                   << ", TYPE: " << (uint32_t)obj->type
+                   << ", RCS: " << (uint32_t)obj->rcs
+                   << ", QU: " << (uint32_t)obj->qu
+                   << ", SE: " << (uint32_t)obj->se
+                   << ", COT: " << (uint32_t)obj->cause;
+                log.pushMsg(ss.str().c_str());
             }
         } break;
 
@@ -427,14 +451,14 @@ bool iec_base::sendCommand(struct iec_obj* obj) {
             send(cmd);
             ++vs;
             if (log.isLogging()) {
-                oss << "SET COMMAND(NORMALIZED VALUE)\n    ADDRESS"
-                    << (uint32_t)obj->address
-                    << ", TYPE: " << (uint32_t)obj->type
-                    << ", RCS: " << (uint32_t)obj->rcs
-                    << ", QU: " << (uint32_t)obj->qu
-                    << ", SE: " << (uint32_t)obj->se
-                    << ", COT: " << (uint32_t)obj->cause;
-                log.pushMsg(oss.str().c_str());
+                ss << "SET COMMAND(NORMALIZED VALUE)\n    ADDRESS"
+                   << (uint32_t)obj->address
+                   << ", TYPE: " << (uint32_t)obj->type
+                   << ", RCS: " << (uint32_t)obj->rcs
+                   << ", QU: " << (uint32_t)obj->qu
+                   << ", SE: " << (uint32_t)obj->se
+                   << ", COT: " << (uint32_t)obj->cause;
+                log.pushMsg(ss.str().c_str());
             }
         } break;
 
@@ -474,20 +498,20 @@ bool iec_base::sendCommand(struct iec_obj* obj) {
             send(cmd);
             ++vs;
             if (log.isLogging()) {
-                oss << "SINGLE COMMAND WITH CP56TIME2A\n    ADDRESS"
-                    << (uint32_t)obj->address
-                    << ", TYPE: " << (uint32_t)obj->type
-                    << ", SCS: " << (uint32_t)obj->scs
-                    << ", QU: " << (uint32_t)obj->qu
-                    << ", SE: " << (uint32_t)obj->se
-                    << ", COT: " << (uint32_t)obj->cause;
-                oss << "\n    TIME.YEAR" << cmd.nsq58.obj.time.year  // 年 2022
-                    << ", TIME.MONTH" << cmd.nsq58.obj.time.mon      // 月 5
-                    << ", TIME.DAY" << cmd.nsq58.obj.time.dmon       // 日 24
-                    << ", TIME.HOUR" << cmd.nsq58.obj.time.hour      // 时 14
-                    << ", TIME.MIN" << cmd.nsq58.obj.time.min        // 分 53
-                    << ", TIME.SRC" << timeinfo->tm_sec;             // 秒 21
-                log.pushMsg(oss.str().c_str());
+                ss << "SINGLE COMMAND WITH CP56TIME2A\n    ADDRESS"
+                   << (uint32_t)obj->address
+                   << ", TYPE: " << (uint32_t)obj->type
+                   << ", SCS: " << (uint32_t)obj->scs
+                   << ", QU: " << (uint32_t)obj->qu
+                   << ", SE: " << (uint32_t)obj->se
+                   << ", COT: " << (uint32_t)obj->cause;
+                ss << "\n    TIME.YEAR" << cmd.nsq58.obj.time.year  // 年 2022
+                   << ", TIME.MONTH" << cmd.nsq58.obj.time.mon      // 月 5
+                   << ", TIME.DAY" << cmd.nsq58.obj.time.dmon       // 日 24
+                   << ", TIME.HOUR" << cmd.nsq58.obj.time.hour      // 时 14
+                   << ", TIME.MIN" << cmd.nsq58.obj.time.min        // 分 53
+                   << ", TIME.SRC" << timeinfo->tm_sec;             // 秒 21
+                log.pushMsg(ss.str().c_str());
             }
         } break;
 
@@ -523,24 +547,29 @@ bool iec_base::sendCommand(struct iec_obj* obj) {
             send(cmd);
             ++vs;
             if (log.isLogging()) {
-                oss << "CLOCK SYNCHRONIZATION\n    ADDRESS"
-                    << (uint32_t)obj->address
-                    << ", TYPE: " << (uint32_t)obj->type
-                    << ", COT: " << (uint32_t)cmd.head.cot;
+                ss << "CLOCK SYNCHRONIZATION\n    ADDRESS"
+                   << (uint32_t)obj->address
+                   << ", TYPE: " << (uint32_t)obj->type
+                   << ", COT: " << (uint32_t)cmd.head.cot;
 
-                oss << "\n    TIME.YEAR" << cmd.nsq103.obj.time.year  // 年 2022
-                    << ", TIME.MONTH" << cmd.nsq103.obj.time.mon      // 月 5
-                    << ", TIME.DAY" << cmd.nsq103.obj.time.dmon       // 日 24
-                    << ", TIME.HOUR" << cmd.nsq103.obj.time.hour      // 时 14
-                    << ", TIME.MIN" << cmd.nsq103.obj.time.min        // 分 53
-                    << ", TIME.SRC" << timeinfo->tm_sec;              // 秒 21
-                log.pushMsg(oss.str().c_str());
+                ss << "\n    TIME.YEAR" << cmd.nsq103.obj.time.year  // 年 2022
+                   << ", TIME.MONTH" << cmd.nsq103.obj.time.mon      // 月 5
+                   << ", TIME.DAY" << cmd.nsq103.obj.time.dmon       // 日 24
+                   << ", TIME.HOUR" << cmd.nsq103.obj.time.hour      // 时 14
+                   << ", TIME.MIN" << cmd.nsq103.obj.time.min        // 分 53
+                   << ", TIME.SRC" << timeinfo->tm_sec;              // 秒 21
+                log.pushMsg(ss.str().c_str());
             }
         } break;
 
         default:
             return false;
             break;
+    }
+
+    ++numMsgUnack;
+    if (numMsgUnack == CLIENTK) {
+        allowSend = false;
     }
 
     return true;
@@ -550,11 +579,12 @@ bool iec_base::sendCommand(struct iec_obj* obj) {
  * @brief iec_base::parse
  * @param papdu
  * @param size
- * @param isSend - If we want to send the result to server.
+ * @param isSend - If we want to send the result to server. This parameter
+ * refers to ...
  */
 void iec_base::parse(struct apdu* papdu, int size, bool isSend) {
-    struct apdu wapdu;  // 缓冲区组装发送apdu
-    uint16_t vr_new;    // TODO
+    //    struct apdu wapdu;  // 缓冲区组装发送apdu
+    uint16_t vrReceived;
     stringstream ss;
 
     if (papdu->start != START) {
@@ -568,14 +598,14 @@ void iec_base::parse(struct apdu* papdu, int size, bool isSend) {
     //        return;
     //    }
 
-    if (size == 6) {  // U格式APDU长度为6（2 + 4）
+    if (size == 6) {  // U格式APDU
         switch (papdu->NS) {
             case STARTDTCON: {
-                log.pushMsg("receive STARTDTCON");
+                log.pushMsg("INFO: receive STARTDTCON");
                 t1Timeout = -1;  // 接收到U启动帧确认报文后t1超时控制失效
             } break;
             case STOPDTACT: {  // 停止数据传送命令
-                log.pushMsg("receive STOPDTACT");
+                log.pushMsg("INFO: receive STOPDTACT");
                 if (isSend) {
                     sendStopDtCon();
                 }
@@ -585,26 +615,43 @@ void iec_base::parse(struct apdu* papdu, int size, bool isSend) {
                 break;
             case TESTFRACT: {
                 // 链路测试命令
-                log.pushMsg("   TESTFRACT");
+                log.pushMsg("INFO: receive TESTFRACT");
                 if (isSend) {
                     sendTestfrCon();
                 }
             } break;
             case TESTFRCON:  // 链路测试命令确认
                 break;
+            case SUPERVISORY: {  // S帧
+                log.pushMsg("INFO: receive SUPERVISORY");
+                if (vs >= papdu->NR) {  // NOTE: 考虑到NR可能比当前vs小
+                    numMsgUnack = vs - papdu->NR;
+                    if (numMsgUnack < CLIENTK) {
+                        allowSend = true;
+                    }
+                } else {
+                    ss.str("");
+                    ss << "ERROR: wrong N(R) of SUPERVISORY message="
+                       << papdu->NR << ", while current vs is " << vs;
+                    log.pushMsg(ss.str().c_str());
+                    // TODO: disconnect
+                    return;
+                }
+            } break;
             default:
                 log.pushMsg("ERROR: unknown control message");
                 break;
         }
-    } else {    // I format message
+    } else {  // I format message
         // TODO: 超时控制
         // code...
 
         // check vr
-        vr_new = papdu->NS >> 1;
-        if (vr_new != vr) {
+        vrReceived = papdu->NS >> 1;
+        if (vrReceived != vr) {
             ss.str("");
-            ss << "ERROR: N(R) is " << uint32_t(this->vr) << ", but the N(S) of I message is " << vr_new;
+            ss << "ERROR: N(R) is " << uint32_t(this->vr)
+               << ", but the N(S) of I message is " << vrReceived;
             log.pushMsg(ss.str().c_str());
             if (ifCheckSeq) {
                 ss.str("");
@@ -617,7 +664,25 @@ void iec_base::parse(struct apdu* papdu, int size, bool isSend) {
             ++vr;
         }
 
+        // check vs
+        if (vs >= papdu->NR) {
+            numMsgUnack = vs - papdu->NR;
+            if (numMsgUnack < CLIENTK) {
+                allowSend = true;
+            }
+        } else {
+            ss.str("");
+            // TODO: 输出好难看
+            ss << "ERROR: wrong N(R) of type(" << papdu->head.type
+               << ") msg, the N(R) is " << papdu->NR << ", while current vs is "
+               << vs;
+            log.pushMsg(ss.str().c_str());
+            // TODO: disconnect
+            return;
+        }
+
         ss.str("");
+        ss << "    N(S): " << papdu->NS << "; N(R): " << papdu->NR << "\n";
         ss << "     COT: " << papdu->head.ca << "; TYP: " << papdu->head.type
            << "; COT: " << int(papdu->head.cot)
            << "; SQ: " << (unsigned int)(papdu->head.sq)
@@ -686,21 +751,12 @@ void iec_base::parse(struct apdu* papdu, int size, bool isSend) {
                 // TODO:
 
                 break;
-                //            // case INTERROGATION:
-                //            // 从站收到类型标识100的报文后：
-                //            // 总召唤确认
-                //            generalInterrogationCon();
-                //            // 发送遥测与遥信数据
-                //            // TODO:
-
-                //            // 总召唤结束
-                //            generalInterrogationEnd();
-                //            break;
             default:
                 break;
         }
 
         // TODO: 修改策略
+        // timeout control settings
         if (t2Timeout < 0) {
             t2Timeout = T2;
         } else if (t2Timeout == 0) {
@@ -709,8 +765,16 @@ void iec_base::parse(struct apdu* papdu, int size, bool isSend) {
         } else {  // t2Timeout > 0
             --t2Timeout;
         }
-
         // update t3
         t3Timeout = T3;
+
+        // check parameter `k` and `w`
+        if (isSend) {
+            ++numMsgReceived;
+            if (numMsgReceived == CLIENTW) {
+                sendMonitorMessage();
+                numMsgReceived = 0;
+            }
+        }
     }
 }
