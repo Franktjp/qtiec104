@@ -6,6 +6,7 @@ QIec104::QIec104(QObject* parent) : QObject(parent) {
 
     this->tm = new QTimer();
     this->log.activateLog();
+    this->log.activateTime();
     initSocket();
 }
 
@@ -49,6 +50,8 @@ void QIec104::tcpConnect() {
         return;
     }
     this->tcp->close();
+    this->log.deavtivateLog();
+    this->log.activateLog();
 
     if (!this->isEnd && this->allowConnect) {
         this->tcp->connectToHost(getSlaveIP(), quint16(getSlavePort()),
@@ -57,7 +60,6 @@ void QIec104::tcpConnect() {
         char buf[100];
         sprintf(buf, "INFO: try to connect ip: %s, port: %d", getSlaveIP(), quint16(getSlavePort()));
         log.pushMsg(buf);
-        qDebug() << buf;
     }
 }
 
@@ -133,7 +135,6 @@ void QIec104::slotTimeOut() {
                 char buf[100];
                 sprintf(buf, "INFO: try to connect ip: %s", getSlaveIP());
                 log.pushMsg(buf);
-                qDebug() << buf;
                 tcpConnect();
             }
         }
