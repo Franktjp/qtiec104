@@ -2,7 +2,6 @@
 
 QIec104::QIec104(QObject* parent) : QObject(parent) {
     this->isEnd = false;
-    this->allowConnect = true;
 
     this->tm = new QTimer();
     this->log.activateLog();
@@ -24,7 +23,7 @@ void QIec104::initSocket() {
     connect(this->tcp, &QTcpSocket::errorOccurred, this,
             &QIec104::slotTcpError);
     // NOTE: 定时器是socket相关的，只有建立连接才有用
-    connect(this->tm, &QTimer::timeout, this, &QIec104::slotTimeOut);
+    connect(this->tm, &QTimer::timeout, this, &QIec104::slotTimeout);
 }
 
 void QIec104::terminate() {
@@ -83,7 +82,7 @@ void QIec104::sendTCP(const char* buf, int size) {
     if (this->tcp->state() == QAbstractSocket::ConnectedState) {
         this->tcp->write(buf, size);
         if (log.isLogging()) {
-            showFrame(buf, size, true);
+            showMessage(buf, size, true);
         }
     } else {
         if (log.isLogging()) {
@@ -112,12 +111,11 @@ void QIec104::slotTcpReadyRead() {
             ++i;
         }
     }
-    packetReadyTCP();
+    messageReadyRead();
 }
 
 void QIec104::slotTcpError(QAbstractSocket::SocketError err) {
-    //    if (err != QAbstractSocket::SocketTimeoutError) {   // TODO:
-    //    为啥要这样
+    //    if (err != QAbstractSocket::SocketTimeoutError) {
     char buf[100];
     sprintf(buf, "ERROR: socket error : %d(%s)", err,
             tcp->errorString().toStdString().c_str());
@@ -126,8 +124,8 @@ void QIec104::slotTcpError(QAbstractSocket::SocketError err) {
     //    }
 }
 
-void QIec104::slotTimeOut() {
-    static uint32_t cnt = 1;
+void QIec104::slotTimeout() {
+    static uint32_t cnt = 0;
     if (!this->isEnd) {
         if (!(cnt++ % 5)) {  // 每5s输出一次
             if (tcp->state() != QAbstractSocket::ConnectedState &&

@@ -6,13 +6,14 @@
 
 #include <sstream>
 #include <string.h>
+#include <unordered_map>
 
 #pragma pack(push)
 #pragma pack(1)
 
 struct iec_obj {
     uint32_t address;  // 3字节地址(4字节空间)
-    cp24time2a time;   // 3字节时标
+    cp56time2a time;   // 3字节时标
 
     float value;  // value 4 bytes float
 
@@ -167,10 +168,10 @@ public:
     static const uint32_t SERVERPORT = 2404;
 
     // 超时时间
-    static const uint32_t T0 = 30;  // 连接建立的超时
-    static const uint32_t T1 = 15;  // 发送或测试APDU的超时
-    static const uint32_t T2 = 10;  // 无数据报文t2<t1时确认的超时
-    static const uint32_t T3 = 20;  // 长期空闲t3>t1状态下发送测试帧的超时
+    static const uint32_t T0 = 3000;  // 连接建立的超时
+    static const uint32_t T1 = 1500;  // 发送或测试APDU的超时
+    static const uint32_t T2 = 1000;  // 无数据报文t2<t1时确认的超时
+    static const uint32_t T3 = 2000;  // 长期空闲t3>t1状态下发送测试帧的超时
 
     // 参数k和参数w
     static const uint32_t CLIENTK = 12; // 参数k，表示发送方在有k个I报文未得到确认时，停止数据传送
@@ -204,14 +205,15 @@ private:
 
 public:
     Logger log;
+    std::unordered_map<int, std::string> umapType2String;
 
 public:
     // functions
     iec_base();
     void parse(struct apdu* papdu, int sz, bool isSend = true);
     void send(const struct apdu& wapdu);
-    void packetReadyTCP();
-    void showFrame(const char* buf, int size, bool isSend);
+    void messageReadyRead();
+    void showMessage(const char* buf, int size, bool isSend);
 
     uint32_t getSlavePort();
     void setSlavePort(uint32_t port);
@@ -219,11 +221,12 @@ public:
     void setSlaveIP(const char* ip);
     uint16_t getSlaveAddr();
     void setSlaveAddr(uint16_t addr);
+    void initClient();
 
     // 回调函数和事件处理函数通常以on开头
     void onTcpConnect();
     void onTcpDisconnect();
-    void onTimeoutPerSecond();  // 用于每秒定时处理
+    void onTimeoutPerSecond();  // 用于每秒定时处理，处理4个超时时间
 
 protected:
     //

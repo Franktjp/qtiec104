@@ -18,8 +18,8 @@ public:
 
 
 private:
-    bool isEnd;           // 是否终止
-    bool allowConnect;  //
+    bool isEnd;           // 通信是否终止
+    bool allowConnect;  // 允许连接
 
 public:
     void terminate();
@@ -58,7 +58,7 @@ private slots:
     void slotTcpConnect();
     void slotTcpReadyRead();  // ready to read via tcp socket
     void slotTcpError(QAbstractSocket::SocketError err);
-    void slotTimeOut();  // when timer is
+    void slotTimeout();
 };
 
 #endif  // QIEC104_H

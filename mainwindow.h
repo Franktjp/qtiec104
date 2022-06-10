@@ -4,6 +4,7 @@
 #include <QClipboard>
 #include <QMainWindow>
 #include <QMessageBox>
+#include <QDateTime>
 #include "qiec104.h"
 
 QT_BEGIN_NAMESPACE
@@ -39,6 +40,8 @@ private slots:
     void slotPbGeneralInterrogationAct();   // send 总召唤激活帧
     void slotPbSendCommand();               // send 命令
 
+private:
+    void initUIControls();
 signals:
 };
 #endif  // MAINWINDOW_H
